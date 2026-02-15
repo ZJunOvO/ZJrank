@@ -9,12 +9,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@cloudbase/js-sdk": "^2.25.6",
     "@fontsource/inter": "^5.2.8",
     "@fontsource/libre-caslon-text": "^5.2.7",
     "@fontsource/noto-sans-sc": "^5.2.9",
     "@fontsource/noto-serif-sc": "^5.2.8",
-    "firebase": "^12.9.0",
-    "firebase-admin": "^13.6.1",
     "framer-motion": "11.3.2",
     "material-symbols": "^0.40.2",
     "react": "18.3.1",

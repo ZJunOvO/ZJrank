@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { uploadImageToStorage } from '../../utils/api';
+import { uploadImageToStorage } from '../../utils/cloudbase-api';
 
 interface CoverImageUploaderProps {
     coverImagePreview: string | null;
