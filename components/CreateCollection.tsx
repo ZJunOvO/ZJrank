@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Collection, Item } from '../types';
 import { IMAGES } from '../constants';
-import { addNewCollection, updateCollection } from '../utils/firebase';
+import { addNewCollection, updateCollection, uploadImageToStorage } from '../utils/api';
 import { DetailClassic } from './DetailClassic';
 import { DetailEditorial } from './DetailEditorial';
 import { CoverImageUploader } from './create/CoverImageUploader';

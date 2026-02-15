@@ -2,7 +2,7 @@
 import React, { useRef, useLayoutEffect, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Collection } from '../types';
-import { uploadImageToStorage } from '../utils/firebase';
+import { uploadImageToStorage } from '../utils/api';
 
 interface ProfileProps {
     collections: Collection[];

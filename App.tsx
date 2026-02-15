@@ -10,7 +10,7 @@ import { CreateCollection } from './components/CreateCollection';
 import { TemplateModal } from './components/TemplateModal';
 import { IMAGES } from './constants';
 import { ViewState, Collection } from './types';
-import { subscribeToCollections, deleteCollection, saveUserProfile, getUserProfile } from './utils/firebase';
+import { subscribeToCollections, deleteCollection, saveUserProfile, getUserProfile, addNewCollection, updateCollection, uploadImageToStorage } from './utils/api';
 
 export default function App() {
     const [view, setView] = useState<ViewState>('home');

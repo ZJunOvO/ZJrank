@@ -137,14 +137,21 @@ VITE_FIREBASE_APP_ID=your_app_id
 
 ### 部署到 Vercel
 
-本项目已配置好 Vercel 部署文件。
+本项目已配置好 Vercel 部署文件，并使用 **Vercel Serverless Functions 作为 Firebase 代理**，确保国内无需 VPN 即可访问。
 
-1. Fork 本仓库或推送到你的 GitHub。
-2. 在 Vercel 中 Import Project。
-3. 保持默认配置即可（已在 `vercel.json` 中配置了 SPA 路由重写）。
-4. 点击 Deploy。
+**快速部署步骤：**
 
-**注意：** 为了确保国内访问速度，我们已经移除了所有国外 CDN 依赖，字体和样式文件均打包在项目中。
+1. Fork 本仓库或推送到你的 GitHub
+2. 在 Vercel 中 Import Project
+3. **重要**：配置环境变量或确保服务账号密钥文件存在（详见 [VERCEL_DEPLOYMENT.md](VERCEL_DEPLOYMENT.md)）
+4. 点击 Deploy
+
+**国内访问解决方案：**
+- ✅ 移除了所有国外 CDN 依赖（字体、样式均本地化）
+- ✅ 使用 Vercel Serverless Functions 代理 Firebase 请求
+- ✅ 通过轮询机制实现准实时数据同步（默认 5 秒）
+
+**详细部署指南**：请查看 [`VERCEL_DEPLOYMENT.md`](VERCEL_DEPLOYMENT.md) 了解完整的部署流程、本地测试方法和常见问题解答。
 
 ## 🔐 安全提醒
 

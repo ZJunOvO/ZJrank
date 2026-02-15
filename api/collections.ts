@@ -1,0 +1,119 @@
+import type { VercelRequest, VercelResponse } from '@vercel/node';
+import * as admin from 'firebase-admin';
+
+// 初始化 Firebase Admin SDK
+if (!admin.apps.length) {
+  let credential;
+  
+  // 优先使用环境变量中的 Base64 编码的服务账号密钥
+  if (process.env.FIREBASE_SERVICE_ACCOUNT_BASE64) {
+    const serviceAccountJson = Buffer.from(
+      process.env.FIREBASE_SERVICE_ACCOUNT_BASE64,
+      'base64'
+    ).toString('utf-8');
+    credential = admin.credential.cert(JSON.parse(serviceAccountJson));
+  } else {
+    // 本地开发或部署时使用文件
+    const serviceAccount = require('../zjrank-fb024-firebase-adminsdk-fbsvc-fe5b8bca5f.json');
+    credential = admin.credential.cert(serviceAccount);
+  }
+  
+  admin.initializeApp({ credential });
+}
+
+const db = admin.firestore();
+
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // 设置 CORS 头
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  // 处理 OPTIONS 预检请求
+  if (req.method === 'OPTIONS') {
+    res.status(200).end();
+    return;
+  }
+
+  try {
+    const { method } = req;
+
+    // GET: 获取所有收藏集
+    if (method === 'GET') {
+      const collectionsRef = db.collection('collections');
+      const snapshot = await collectionsRef.orderBy('lastEdited', 'desc').get();
+      
+      const collections = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+
+      return res.status(200).json({ success: true, data: collections });
+    }
+
+    // POST: 创建新收藏集
+    if (method === 'POST') {
+      const { collection } = req.body;
+      
+      if (!collection) {
+        return res.status(400).json({ success: false, error: 'Collection data is required' });
+      }
+
+      const newCollection = {
+        ...collection,
+        lastEdited: admin.firestore.Timestamp.now()
+      };
+
+      const docRef = await db.collection('collections').add(newCollection);
+      
+      return res.status(201).json({ 
+        success: true, 
+        data: { id: docRef.id, ...newCollection }
+      });
+    }
+
+    // PUT: 更新收藏集
+    if (method === 'PUT') {
+      const { id, updates } = req.body;
+      
+      if (!id || !updates) {
+        return res.status(400).json({ success: false, error: 'ID and updates are required' });
+      }
+
+      const updatedData = {
+        ...updates,
+        lastEdited: admin.firestore.Timestamp.now()
+      };
+
+      await db.collection('collections').doc(id).update(updatedData);
+      
+      return res.status(200).json({ 
+        success: true, 
+        data: { id, ...updatedData }
+      });
+    }
+
+    // DELETE: 删除收藏集
+    if (method === 'DELETE') {
+      const { id } = req.query;
+      
+      if (!id || typeof id !== 'string') {
+        return res.status(400).json({ success: false, error: 'Collection ID is required' });
+      }
+
+      await db.collection('collections').doc(id).delete();
+      
+      return res.status(200).json({ success: true, message: 'Collection deleted' });
+    }
+
+    return res.status(405).json({ success: false, error: 'Method not allowed' });
+
+  } catch (error) {
+    console.error('API Error:', error);
+    return res.status(500).json({ 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Internal server error' 
+    });
+  }
+}

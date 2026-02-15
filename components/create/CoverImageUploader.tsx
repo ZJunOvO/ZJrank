@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { uploadImageToStorage } from '../../utils/firebase';
+import { uploadImageToStorage } from '../../utils/api';
 
 interface CoverImageUploaderProps {
     coverImagePreview: string | null;
