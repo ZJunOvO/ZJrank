@@ -3,25 +3,29 @@ import * as admin from 'firebase-admin';
 
 // 初始化 Firebase Admin SDK
 if (!admin.apps.length) {
-  let credential;
-  
-  // 优先使用环境变量中的 Base64 编码的服务账号密钥
-  if (process.env.FIREBASE_SERVICE_ACCOUNT_BASE64) {
+  try {
+    // 必须使用环境变量
+    if (!process.env.FIREBASE_SERVICE_ACCOUNT_BASE64) {
+      throw new Error('FIREBASE_SERVICE_ACCOUNT_BASE64 environment variable is not set');
+    }
+
     const serviceAccountJson = Buffer.from(
       process.env.FIREBASE_SERVICE_ACCOUNT_BASE64,
       'base64'
     ).toString('utf-8');
-    credential = admin.credential.cert(JSON.parse(serviceAccountJson));
-  } else {
-    // 本地开发或部署时使用文件
-    const serviceAccount = require('../zjrank-fb024-firebase-adminsdk-fbsvc-fe5b8bca5f.json');
-    credential = admin.credential.cert(serviceAccount);
+    
+    const serviceAccount = JSON.parse(serviceAccountJson);
+    
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount)
+    });
+    
+    console.log('✅ Firebase Admin initialized successfully');
+  } catch (error) {
+    console.error('❌ Firebase Admin initialization failed:', error);
+    // 这里不抛出错误，而是在 handler 中处理，以免整个函数崩溃无法返回 JSON
   }
-  
-  admin.initializeApp({ credential });
 }
-
-const db = admin.firestore();
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // 设置 CORS 头
@@ -37,6 +41,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
+    // 检查是否初始化成功
+    if (!admin.apps.length) {
+      throw new Error('Firebase Admin SDK not initialized. Check server logs for details.');
+    }
+
+    const db = admin.firestore();
     const { method } = req;
 
     // GET: 获取所有收藏集
@@ -111,9 +121,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   } catch (error) {
     console.error('API Error:', error);
+    
+    // 返回更详细的错误信息用于调试
     return res.status(500).json({ 
       success: false, 
-      error: error instanceof Error ? error.message : 'Internal server error' 
+      error: error instanceof Error ? error.message : 'Internal server error',
+      errorType: error instanceof Error ? error.constructor.name : 'Unknown',
+      // 在非生产环境返回堆栈信息，或如果显式开启调试
+      ...(process.env.VERCEL_ENV !== 'production' && { 
+        stack: error instanceof Error ? error.stack : undefined 
+      })
     });
   }
 }
