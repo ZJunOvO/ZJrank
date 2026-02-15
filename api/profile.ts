@@ -2,7 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import * as admin from 'firebase-admin';
 
 // 初始化 Firebase Admin SDK
-if (!admin.apps.length) {
+if (!admin.apps || admin.apps.length === 0) {
   try {
     // 必须使用环境变量
     if (!process.env.FIREBASE_SERVICE_ACCOUNT_BASE64) {
