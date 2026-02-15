@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Connectivity Test</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        .status { margin-bottom: 10px; padding: 10px; border-radius: 4px; }
+        .pending { background-color: #fff3cd; color: #856404; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        #logs { background: #f5f5f5; padding: 10px; border: 1px solid #ddd; height: 300px; overflow-y: auto; font-family: monospace; }
+    </style>
+</head>
+<body>
+    <h1>Firebase Connectivity Test</h1>
+    
+    <div id="auth-status" class="status pending">Auth: Testing...</div>
+    <div id="firestore-status" class="status pending">Firestore: Testing...</div>
+    
+    <h3>Logs:</h3>
+    <div id="logs"></div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, getDocs, limit, query } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+        const logDiv = document.getElementById('logs');
+        function log(msg, type = 'info') {
+            const div = document.createElement('div');
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            div.style.color = type === 'error' ? 'red' : (type === 'success' ? 'green' : 'black');
+            logDiv.appendChild(div);
+            console.log(msg);
+        }
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBVAdSkaItlzSWV0p0pyxjyw7zpj9Fohz8",
+            authDomain: "zjrank-fb024.firebaseapp.com",
+            projectId: "zjrank-fb024",
+            storageBucket: "zjrank-fb024.firebasestorage.app",
+            messagingSenderId: "1065962404707",
+            appId: "1:1065962404707:web:0c9fe10927c88c5416f156"
+        };
+
+        async function runTest() {
+            try {
+                log("Initializing Firebase...", "info");
+                const app = initializeApp(firebaseConfig);
+                log("Firebase App initialized.", "success");
+
+                // Test Auth
+                const authStatus = document.getElementById('auth-status');
+                try {
+                    log("Testing Authentication (Anonymous)...", "info");
+                    const auth = getAuth(app);
+                    // Set a timeout for auth
+                    const authPromise = signInAnonymously(auth);
+                    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Auth timeout")), 10000));
+                    
+                    await Promise.race([authPromise, timeoutPromise]);
+                    
+                    log("Authentication successful!", "success");
+                    authStatus.textContent = "Auth: Connected";
+                    authStatus.className = "status success";
+                } catch (e) {
+                    log(`Auth failed: ${e.message}`, "error");
+                    authStatus.textContent = `Auth: Failed (${e.message})`;
+                    authStatus.className = "status error";
+                }
+
+                // Test Firestore
+                const firestoreStatus = document.getElementById('firestore-status');
+                try {
+                    log("Testing Firestore Connection...", "info");
+                    const db = getFirestore(app);
+                    const q = query(collection(db, "muse_collections"), limit(1));
+                    
+                    // Set a timeout for firestore
+                    const firestorePromise = getDocs(q);
+                    const fsTimeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Firestore timeout")), 10000));
+
+                    await Promise.race([firestorePromise, fsTimeoutPromise]);
+
+                    log("Firestore connection successful!", "success");
+                    firestoreStatus.textContent = "Firestore: Connected";
+                    firestoreStatus.className = "status success";
+                } catch (e) {
+                    log(`Firestore failed: ${e.message}`, "error");
+                    firestoreStatus.textContent = `Firestore: Failed (${e.message})`;
+                    firestoreStatus.className = "status error";
+                }
+
+            } catch (e) {
+                log(`General Error: ${e.message}`, "error");
+            }
+        }
+
+        runTest();
+    </script>
+</body>
+</html>
