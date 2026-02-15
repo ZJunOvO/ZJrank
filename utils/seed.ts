@@ -1,6 +1,7 @@
 import { db, ensureAuth } from './cloudbase';
 
-const COLLECTIONS_REF = db.collection('collections');
+// 根据用户 CloudBase 控制台截图更新集合名称
+const COLLECTIONS_REF = db.collection('muse_collections');
 
 // 模拟数据
 const SEED_DATA = [
@@ -70,8 +71,8 @@ export const seedDatabase = async () => {
         isDraft: false
       };
       
-      await COLLECTIONS_REF.add(collectionData);
-      console.log(`成功写入集合: ${data.title}`);
+      const res = await COLLECTIONS_REF.add(collectionData);
+      console.log(`成功写入集合: ${data.title}`, res);
     }
     console.log('模拟数据写入完成！');
   } catch (error) {

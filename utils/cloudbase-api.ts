@@ -1,8 +1,9 @@
 import { db, app, ensureAuth } from './cloudbase';
 import type { Collection } from '../types';
 
-const COLLECTIONS_REF = db.collection('collections');
-const USERS_REF = db.collection('users');
+// 根据用户 CloudBase 控制台截图更新集合名称
+const COLLECTIONS_REF = db.collection('muse_collections');
+const USERS_REF = db.collection('settings');
 
 /**
  * 获取所有收藏集
@@ -12,9 +13,25 @@ export const getCollections = async (): Promise<Collection[]> => {
   try {
     const res = await COLLECTIONS_REF.orderBy('lastEdited', 'desc').get();
     
-    return res.data.map((doc: any) => {
+    // 安全处理 res.data，确保它是数组
+    const data = Array.isArray(res.data) ? res.data : [];
+
+    return data.map((doc: any) => {
         // 转换 CloudBase Date 对象为字符串
-        const lastEditedDate = doc.lastEdited instanceof Date ? doc.lastEdited : new Date(doc.lastEdited);
+        let lastEditedDate: Date;
+        if (doc.lastEdited instanceof Date) {
+            lastEditedDate = doc.lastEdited;
+        } else if (typeof doc.lastEdited === 'string') {
+            lastEditedDate = new Date(doc.lastEdited);
+        } else {
+            // 如果 lastEdited 不存在或格式无法识别，使用当前时间作为兜底
+            lastEditedDate = new Date();
+        }
+        
+        // 确保 Date 对象有效
+        if (isNaN(lastEditedDate.getTime())) {
+            lastEditedDate = new Date();
+        }
         
         return {
             id: doc._id,
@@ -41,7 +58,19 @@ export const subscribeToCollections = (
         // snapshot.docs 包含当前所有文档
         if (snapshot.docs) {
           const collections = snapshot.docs.map((doc: any) => {
-            const lastEditedDate = doc.lastEdited instanceof Date ? doc.lastEdited : new Date(doc.lastEdited);
+            let lastEditedDate: Date;
+            if (doc.lastEdited instanceof Date) {
+                lastEditedDate = doc.lastEdited;
+            } else if (typeof doc.lastEdited === 'string') {
+                lastEditedDate = new Date(doc.lastEdited);
+            } else {
+                lastEditedDate = new Date();
+            }
+            
+            if (isNaN(lastEditedDate.getTime())) {
+                lastEditedDate = new Date();
+            }
+
             return {
                 id: doc._id,
                 ...doc,

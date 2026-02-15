@@ -24,7 +24,12 @@ export const signInAnonymously = async () => {
   }
 
   try {
-    await auth.anonymousAuthProvider().signIn();
+    // 尝试使用 signInAnonymously，如果不存在则回退到 anonymousAuthProvider
+    if (auth.signInAnonymously) {
+      await auth.signInAnonymously();
+    } else {
+      await auth.anonymousAuthProvider().signIn();
+    }
     return await auth.getLoginState();
   } catch (error) {
     console.error('Anonymous login failed:', error);
